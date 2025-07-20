@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darshan Tate - Full-Stack Developer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/ScrollTrigger.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --primary: #8A2BE2; /* BlueViolet */
+            --secondary: #FF00FF; /* Magenta */
+            --accent: #00F0FF; /* Aqua */
+            --text: #e2e8f0;
+            --text-muted: #94a3b8; /* slate-400 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            visibility: hidden; 
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 5rem 2rem;
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .text-gradient {
+            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-flow 5s ease infinite;
+            background-size: 200% 200%;
+        }
+        @keyframes gradient-flow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .about-visual canvas {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        .about-visual:active canvas {
+            cursor: grabbing;
+        }
+        
+        .skill-card {
+            --glow-color: var(--primary);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .skill-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 0 15px var(--glow-color), 0 0 30px var(--glow-color);
+        }
+        .skill-card svg {
+            width: 48px;
+            height: 48px;
+            transition: transform 0.3s ease;
+        }
+        .skill-card:hover svg {
+            transform: scale(1.1);
+        }
+
+        .project-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            min-height: 350px;
+        }
+        .project-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease-out;
+        }
+        .project-card:hover .project-image {
+            transform: scale(1.1);
+        }
+        .project-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(10, 10, 10, 0.95), rgba(10, 10, 10, 0.7), transparent);
+            padding: 1.5rem;
+            transform: translateY(100%);
+            transition: transform 0.5s ease-out;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .project-card:hover .project-overlay {
+            transform: translateY(0);
+        }
+        .project-details {
+            transform: translateY(50px);
+            opacity: 0;
+            transition: transform 0.5s 0.2s ease-out, opacity 0.5s 0.2s ease-out;
+        }
+        .project-card:hover .project-details {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg);
+        }
+        #preloader svg {
+            width: 150px;
+            height: 150px;
+        }
+        #preloader .path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            transform: scaleX(0);
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform-origin: bottom right;
+            transition: transform 0.3s ease-out;
+        }
+        .nav-link:hover {
+            color: var(--text);
+        }
+        .nav-link:hover:after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+        .section-title {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .blinking-cursor {
+            font-weight: 100;
+            color: var(--accent);
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            from, to { opacity: 1 }
+            50% { opacity: 0 }
+        }
+
+        /* Education Timeline */
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background: linear-gradient(to bottom, var(--primary), var(--accent));
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+        .timeline-container {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+        .timeline-container.left {
+            left: 0;
+        }
+        .timeline-container.right {
+            left: 50%;
+        }
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            right: -17px;
+            background-color: var(--bg);
+            border: 4px solid var(--primary);
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .timeline-container.right::after {
+            left: -16px;
+        }
+        .timeline-content {
+            padding: 20px 30px;
+            position: relative;
+            border-radius: 6px;
+        }
+        
+        /* Contact Socials */
+        .social-link {
+            position: relative;
+        }
+        .social-link .tooltip {
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .social-link:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Preloader -->
+    <div id="preloader">
+        <svg viewBox="0 0 100 100">
+            <path class="path" d="M 25 20 L 25 80 C 70 80, 70 20, 25 20" stroke-width="3" stroke="var(--primary)" fill="none" />
+            <path class="path" d="M 55 20 L 95 20 M 75 20 L 75 80" stroke-width="3" stroke="var(--accent)" fill="none" />
+        </svg>
+    </div>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <header class="fixed top-0 left-0 right-0 z-40 p-4">
+        <nav class="w-full max-w-6xl mx-auto flex justify-between items-center glass-card rounded-xl p-3 px-6">
+            <div class="text-xl font-bold tracking-wider">DT</div>
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="#about" class="nav-link font-bold">About</a>
+                <a href="#education" class="nav-link font-bold">Education</a>
+                <a href="#projects" class="nav-link font-bold">Projects</a>
+                <a href="#accomplishments" class="nav-link font-bold">Accomplishments</a>
+                <a href="#skills" class="nav-link font-bold">Skills</a>
+                <a href="#contact" class="nav-link font-bold">Contact</a>
+            </div>
+             <div class="flex items-center gap-4">
+                <a href="https://drive.google.com/file/d/1tWsC9Sm2INy9mWStl4dnDmf_bUt73IQ2/view?usp=sharing" download="Darshan_Tate_Resume.pdf" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Resume
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="section flex-col text-center">
+        <div class="max-w-4xl">
+            <h1 id="hero-headline" class="text-5xl md:text-7xl lg:text-8xl font-black text-white">
+                <span class="blinking-cursor">|</span>
+            </h1>
+            <p class="mt-8 text-2xl md:text-3xl text-slate-200 max-w-3xl mx-auto hero-subtitle">
+                Hi I'm <span class="text-4xl md:text-5xl font-bold text-gradient">Darshan Tate</span>, a full-stack developer turning complex problems into elegant, data-driven solutions.
+            </p>
+            <div class="mt-10 hero-cta">
+                <a href="#projects" class="bg-white text-black font-bold py-3 px-8 rounded-lg hover:bg-slate-200 transition-all duration-300">View My Work</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section">
+        <div class="container mx-auto grid md:grid-cols-2 gap-16 items-center">
+            <div class="about-text">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 section-title">The Story So Far</h2>
+                <p class="text-slate-200 mb-4 leading-relaxed text-justify">
+                    I am a final-year Electronics and Communication Engineering student at IIIT Nagpur, specializing in the Internet of Things. My journey into technology is driven by a passion for problem-solving and a fascination with building things from the ground up.
+                </p>
+                <p class="text-slate-200 mb-4 leading-relaxed text-justify">
+                    With a strong foundation in both hardware and software, I've honed my skills in full-stack development. I thrive in dynamic environments where I can leverage my analytical mindset to create innovative and impactful solutions.
+                </p>
+                 <p class="text-slate-200 leading-relaxed text-justify">
+                    From architecting multi-agent AI systems to building real-time tracking applications, I am constantly seeking challenges that push the boundaries of what's possible.
+                </p>
+            </div>
+            <div class="about-visual glass-card rounded-2xl p-4 flex items-center justify-center h-96 aspect-square">
+                <canvas id="interactive-art-canvas"></canvas>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Education Section -->
+    <section id="education" class="section flex-col">
+        <div class="container mx-auto">
+            <h2 class="text-4xl md:text-5xl font-bold mb-16 section-title text-center">My Academic Journey</h2>
+            <div class="timeline">
+                <div class="timeline-container left">
+                    <div class="timeline-content glass-card">
+                        <h3 class="text-xl font-bold text-primary">Indian Institute of Information Technology, Nagpur</h3>
+                        <p class="text-sm text-slate-400 mt-1">2022 - 2026</p>
+                        <p class="mt-4 text-slate-200">Bachelor of Technology in Electronics and Communication, Specialization in IoT.</p>
+                    </div>
+                </div>
+                <div class="timeline-container right">
+                    <div class="timeline-content glass-card">
+                        <h3 class="text-xl font-bold text-accent">Cambridge Junior College, Nanded</h3>
+                        <p class="text-sm text-slate-400 mt-1">2020 - 2022</p>
+                        <p class="mt-4 text-slate-200">Completed Higher Secondary School with a focus on science and mathematics, achieving 90.5%.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="section flex-col py-20">
+        <div class="container mx-auto text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-12 section-title">Projects</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Project 1: AlgoGenie -->
+                <div class="project-card glass-card">
+                    <img src="https://placehold.co/600x400/111827/e2e8f0?text=AlgoGenie" alt="AlgoGenie Project" class="project-image">
+                    <div class="project-overlay">
+                        <div class="project-details">
+                            <h3 class="text-2xl font-bold text-indigo-400 mb-2">AlgoGenie</h3>
+                            <p class="text-slate-200 mb-4 text-justify text-base">An AI-powered multi-agent system that solves DSA problems with detailed explanations.</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="bg-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">AutoGen</span>
+                                <span class="bg-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Python</span>
+                                <span class="bg-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Docker</span>
+                            </div>
+                            <a href="https://github.com/DarshanTate/Algogenie" target="_blank" class="mt-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-500 transition-colors">View Project</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Project 2: GeoPulse -->
+                <div class="project-card glass-card">
+                   <img src="https://placehold.co/600x400/111827/e2e8f0?text=GeoPulse" alt="GeoPulse Project" class="project-image">
+                   <div class="project-overlay">
+                        <div class="project-details">
+                             <h3 class="text-2xl font-bold text-teal-400 mb-2">GeoPulse</h3>
+                            <p class="text-slate-200 mb-4 text-justify text-base">A real-time location tracking web application using WebSockets for live data streaming.</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="bg-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Node.js</span>
+                                <span class="bg-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Socket.io</span>
+                                <span class="bg-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Leaflet.js</span>
+                            </div>
+                            <a href="https://github.com/DarshanTate/Geopulse" target="_blank" class="mt-auto bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-500 transition-colors">View Project</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Project 3: TradeHub -->
+                <div class="project-card glass-card">
+                    <img src="https://placehold.co/600x400/111827/e2e8f0?text=TradeHub" alt="TradeHub Project" class="project-image">
+                    <div class="project-overlay">
+                        <div class="project-details">
+                            <h3 class="text-2xl font-bold text-rose-400 mb-2">TradeHub</h3>
+                            <p class="text-slate-200 mb-4 text-justify text-base">A full-stack MERN clone of the Zerodha trading platform with real-time data visualization.</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="bg-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">React.js</span>
+                                <span class="bg-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">MongoDB</span>
+                                <span class="bg-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Express.js</span>
+                            </div>
+                            <a href="https://github.com/DarshanTate/Tradehub" target="_blank" class="mt-auto bg-rose-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-rose-500 transition-colors">View Project</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Accomplishments Section -->
+    <section id="accomplishments" class="section">
+        <div class="container mx-auto text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-16 section-title">Accomplishments</h2>
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="accomplishment-card glass-card p-8 rounded-2xl flex items-center gap-6">
+                    <div class="flex-shrink-0">
+                        <svg class="w-16 h-16 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z" /></svg>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="text-xl font-bold text-amber-400">Top 40 - Hack-a-Sol Challenge</h3>
+                        <p class="text-slate-300 mt-2">Secured a spot in the top 40 among 400+ teams in the prestigious IIIT Naya Raipur Hack-a-Sol Challenge.</p>
+                    </div>
+                </div>
+                <div class="accomplishment-card glass-card p-8 rounded-2xl flex items-center gap-6">
+                     <div class="flex-shrink-0">
+                        <svg class="w-16 h-16 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v1.586M12 12.253v1.586M12 18.253v1.586M7.5 12.253h1.586M15 12.253h1.586M18.364 18.364l-1.121-1.121M5.636 5.636l1.121 1.121M18.364 5.636l-1.121 1.121M5.636 18.364l1.121-1.121" /></svg>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="text-xl font-bold text-cyan-400">Certified AI Professional</h3>
+                        <p class="text-slate-300 mt-2">Completed 34 hours of intensive training in "The Complete AI Guide: Learn ChatGPT, Generative AI & More" via Udemy.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="section">
+        <div class="container mx-auto text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-16 section-title">Technical Arsenal</h2>
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6 md:gap-8 max-w-4xl mx-auto">
+                <!-- C++ -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #00599C;">
+                    <svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M64 0C28.7 0 0 28.7 0 64s28.7 64 64 64 64-28.7 64-64S99.3 0 64 0zm0 121.6C32.1 121.6 6.4 95.9 6.4 64S32.1 6.4 64 6.4s57.6 25.7 57.6 57.6-25.7 57.6-57.6 57.6z" fill="#00599C"/><path d="M79.5 76.2c-7.3 7.3-17.2 11.3-27.4 11.3-10.3 0-20.2-4-27.4-11.3-1.2-1.2-1.2-3.3 0-4.5s3.3-1.2 4.5 0c6.2 6.2 14.5 9.6 22.9 9.6s16.7-3.4 22.9-9.6c1.2-1.2 3.3-1.2 4.5 0s1.3 3.3.1 4.5z" fill="#fff"/><path d="M49.8 40.1c-1.2-1.2-3.3-1.2-4.5 0s-1.2 3.3 0 4.5c.6.6 1.4 1 2.3 1s1.7-.3 2.3-1c1.2-1.2 1.2-3.3 0-4.5z" fill="#fff"/><path d="M82.8 40.1c-1.2-1.2-3.3-1.2-4.5 0s-1.2 3.3 0 4.5c.6.6 1.4 1 2.3 1s1.7-.3 2.3-1c1.2-1.2 1.2-3.3 0-4.5z" fill="#fff"/><path d="M96.2 60.1h-8.9v-8.9c0-1.7-1.4-3.1-3.1-3.1s-3.1 1.4-3.1 3.1v8.9h-8.9c-1.7 0-3.1 1.4-3.1 3.1s1.4 3.1 3.1 3.1h8.9v8.9c0 1.7 1.4 3.1 3.1 3.1s3.1-1.4 3.1-3.1v-8.9h8.9c1.7 0 3.1-1.4 3.1-3.1s-1.4-3.1-3.1-3.1z" fill="#00599C"/><path d="M112.5 60.1h-8.9v-8.9c0-1.7-1.4-3.1-3.1-3.1s-3.1 1.4-3.1 3.1v8.9h-8.9c-1.7 0-3.1 1.4-3.1 3.1s1.4 3.1 3.1 3.1h8.9v8.9c0 1.7 1.4 3.1 3.1 3.1s3.1-1.4 3.1-3.1v-8.9h8.9c1.7 0 3.1-1.4 3.1-3.1s-1.4-3.1-3.1-3.1z" fill="#00599C"/></svg>
+                    <span class="font-bold text-sm">C++</span>
+                </div>
+                <!-- JavaScript -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #F7DF1E;">
+                    <svg viewBox="0 0 630 630" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h630v630H0z" fill="#F7DF1E"/><path d="M315 508.5c-106.635 0-193.5-86.865-193.5-193.5S208.365 121.5 315 121.5c106.635 0 193.5 86.865 193.5 193.5 0 73.575-41.535 139.125-102.375 172.425-21.15 11.55-44.4 17.4-68.25 19.5v-2.25c23.85-2.1 47.1-7.95 68.25-19.5 60.84-33.3 102.375-98.85 102.375-172.425 0-106.635-86.865-193.5-193.5-193.5S121.5 208.365 121.5 315c0 94.425 68.25 174.6 157.5 190.275v-37.05c-89.25-15.675-157.5-95.85-157.5-190.275 0-89.25 72.9-162.15 162.15-162.15 89.25 0 162.15 72.9 162.15 162.15 0 66.15-39.9 124.5-97.65 149.7v-34.8c57.75-25.2 97.65-83.55 97.65-149.7 0-89.25-72.9-162.15-162.15-162.15-89.25 0-162.15 72.9-162.15 162.15 0 76.95 54.15 142.2 126.9 157.5v37.05c-72.75-15.3-126.9-80.55-126.9-157.5 0-106.635 86.865-193.5 193.5-193.5S508.5 208.365 508.5 315c0 106.635-86.865 193.5-193.5 193.5z" fill="#000"/></svg>
+                    <span class="font-bold text-sm">JavaScript</span>
+                </div>
+                <!-- Python -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #3776AB;">
+                    <svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M64 0C28.7 0 0 28.7 0 64s28.7 64 64 64 64-28.7 64-64S99.3 0 64 0z" fill="#3776AB"/><path d="M84.4 69.8c-3.8-2.2-6.3-6.3-6.3-10.9V40.7c0-6.1-4.9-11-11-11H48.8c-6.1 0-11 4.9-11 11v18.2c0 4.6-2.5 8.7-6.3 10.9-3.8 2.2-6.3 6.3-6.3 10.9v18.2c0 6.1 4.9 11 11 11h18.2c6.1 0 11-4.9 11-11V90.7c0-4.6 2.5-8.7 6.3-10.9z" fill="#FFD43B"/><path d="M43.6 58.9c3.8 2.2 6.3 6.3 6.3 10.9v18.2c0 6.1 4.9 11 11 11h18.2c6.1 0 11-4.9 11-11V80.7c0-4.6 2.5-8.7 6.3-10.9 3.8-2.2 6.3-6.3 6.3-10.9V40.7c0-6.1-4.9-11-11-11H68.8c-6.1 0-11 4.9-11 11v18.2c0 4.6-2.5 8.7-6.3 10.9z" fill="#3776AB"/></svg>
+                    <span class="font-bold text-sm">Python</span>
+                </div>
+                <!-- Node.js -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #339933;">
+                    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M128 0l110.8 64v128L128 256 17.2 192V64L128 0z" fill="#339933"/><path d="M128 24.6L34.9 76.4v103.2L128 231.4l93.1-51.8V76.4L128 24.6z" fill="#8CC84B"/><path d="M128 32.4l84.4 46.8v93.6l-84.4 46.8-84.4-46.8V79.2L128 32.4z" fill="#68A063"/><path d="M193.1 76.1l-65.1 37.6-65.2-37.6-22.3 12.9 87.5 50.5 87.5-50.5-22.4-12.9z" fill="#fff" fill-opacity=".2"/><path d="M128 147.2l-65.1-37.6v25.8l65.1 37.6 65.2-37.6v-25.8l-65.2 37.6z" fill="#fff" fill-opacity=".2"/><path d="M128 184.8l-65.1-37.6v25.8l65.1 37.6 65.2-37.6v-25.8l-65.2 37.6z" fill="#fff" fill-opacity=".2"/></svg>
+                    <span class="font-bold text-sm">Node.js</span>
+                </div>
+                <!-- React.js -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #61DAFB;">
+                    <svg viewBox="-11.5 -10.23174 23 20.46348" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="0" cy="0" r="2.05" fill="#61DAFB"/><g stroke="#61DAFB" stroke-width="1" fill="none"><ellipse rx="11" ry="4.2"/><ellipse rx="11" ry="4.2" transform="rotate(60)"/><ellipse rx="11" ry="4.2" transform="rotate(120)"/></g></svg>
+                    <span class="font-bold text-sm">React.js</span>
+                </div>
+                <!-- Tailwind CSS -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #38B2AC;">
+                    <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M256 32C132.3 32 32 132.3 32 256s100.3 224 224 224 224-100.3 224-224S379.7 32 256 32zm0 400c-97.2 0-176-78.8-176-176S158.8 80 256 80s176 78.8 176 176-78.8 176-176 176z" fill="#38B2AC"/><path d="M160 240c0-53 43-96 96-96s96 43 96 96-43 96-96 96-96-43-96-96zm144 0c0-26.5-21.5-48-48-48s-48 21.5-48 48 21.5 48 48 48 48-21.5 48-48z" fill="#38B2AC"/></svg>
+                    <span class="font-bold text-sm">Tailwind CSS</span>
+                </div>
+                <!-- MongoDB -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #47A248;">
+                    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M128 0C57.3 0 0 57.3 0 128s57.3 128 128 128 128-57.3 128-128S198.7 0 128 0z" fill="#47A248"/><path d="M128 24.6c-45.6 0-83.4 28.5-97.9 68.4 14.5-40 52.3-68.4 97.9-68.4s83.4 28.5 97.9 68.4C211.4 53.1 173.6 24.6 128 24.6z" fill="#FFF" fill-opacity=".2"/><path d="M128 231.4c45.6 0 83.4-28.5 97.9-68.4-14.5 40-52.3 68.4-97.9 68.4s-83.4-28.5-97.9-68.4c14.5 39.9 52.3 68.4 97.9 68.4z" fill="#3F8340" fill-opacity=".2"/><path d="M128 40.9c-48.5 0-88.8 35.6-96.8 81.1 8-45.5 48.3-81.1 96.8-81.1s88.8 35.6 96.8 81.1c-8-45.5-48.3-81.1-96.8-81.1z" fill="#FFF" fill-opacity=".2"/></svg>
+                    <span class="font-bold text-sm">MongoDB</span>
+                </div>
+                <!-- MySQL -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #4479A1;">
+                    <svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M64 0C28.7 0 0 28.7 0 64s28.7 64 64 64 64-28.7 64-64S99.3 0 64 0z" fill="#4479A1"/><path d="M84.4 69.8c-3.8-2.2-6.3-6.3-6.3-10.9V40.7c0-6.1-4.9-11-11-11H48.8c-6.1 0-11 4.9-11 11v18.2c0 4.6-2.5 8.7-6.3 10.9-3.8 2.2-6.3 6.3-6.3 10.9v18.2c0 6.1 4.9 11 11 11h18.2c6.1 0 11-4.9 11-11V90.7c0-4.6 2.5-8.7 6.3-10.9z" fill="#F29111"/><path d="M43.6 58.9c3.8 2.2 6.3 6.3 6.3 10.9v18.2c0 6.1 4.9 11 11 11h18.2c6.1 0 11-4.9 11-11V80.7c0-4.6 2.5-8.7 6.3-10.9 3.8-2.2 6.3-6.3 6.3-10.9V40.7c0-6.1-4.9-11-11-11H68.8c-6.1 0-11 4.9-11 11v18.2c0 4.6-2.5 8.7-6.3 10.9z" fill="#4479A1"/></svg>
+                    <span class="font-bold text-sm">MySQL</span>
+                </div>
+                 <!-- Docker -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #2496ED;">
+                    <svg viewBox="0 0 97 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M97 40.5c0-10-5.7-18.6-13.9-22.3-1.3-6.3-6.8-11.2-13.4-11.2h-2.2c-1.3 0-2.6.2-3.8.5-3.2-6.8-10.4-11.4-18.6-11.4-11.4 0-20.7 9.3-20.7 20.7 0 1.4.1 2.7.4 4-1.2-.2-2.4-.4-3.7-.4-8.8 0-16.1 6.3-18.1 14.6C1.3 36.8 0 39.4 0 42.4c0 4.6 3.2 8.5 7.4 9.6v.2c-4.2 1.1-7.4 5-7.4 9.6 0 3 1.3 5.6 3.3 7.5C1.3 71.2 0 73.8 0 76.8c0 1.5.5 2.9 1.3 4.1h.1c.1.1.2.2.3.3.3.3.6.6.9.8.9.8 2 1.4 3.1 1.8.8.3 1.6.4 2.4.5h.3c.1 0 .2 0 .3.1h78.3c.1 0 .2 0 .3-.1h.3c.8-.1 1.6-.2 2.4-.5 1.1-.4 2.2-1 3.1-1.8.3-.2.6-.5.9-.8.1-.1.2-.2.3-.3h.1c.8-1.2 1.3-2.6 1.3-4.1 0-3-1.3-5.6-3.3-7.5 2-1.9 3.3-4.5 3.3-7.5 0-4.6-3.2-8.5-7.4-9.6v-.2c4.2-1.1 7.4-5 7.4-9.6zM29.8 51.2H21v-8.7h8.8v8.7zm0-11.6H21v-8.8h8.8v8.8zm0-11.7H21v-8.7h8.8v8.7zm11.6 23.3h-8.8v-8.7h8.8v8.7zm0-11.6h-8.8v-8.8h8.8v8.8zm0-11.7h-8.8v-8.7h8.8v8.7zm11.7 23.3h-8.8v-8.7h8.8v8.7zm0-11.6h-8.8v-8.8h8.8v8.8zm0-11.7h-8.8v-8.7h8.8v8.7zm11.6 23.3h-8.8v-8.7h8.8v8.7zm0-11.6h-8.8v-8.8h8.8v8.8zm11.7 0h-8.8v-8.8h8.8v8.8z" fill="#2496ED"/></svg>
+                    <span class="font-bold text-sm">Docker</span>
+                </div>
+                <!-- GitHub -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #ffffff;">
+                    <svg viewBox="0 0 98 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-2.913.324-2.913 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.438-3.141 1.702-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0112.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" fill="#fff"/></svg>
+                    <span class="font-bold text-sm">GitHub</span>
+                </div>
+                <!-- SQL -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #E44D26;">
+                    <svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M64 0C28.7 0 0 28.7 0 64s28.7 64 64 64 64-28.7 64-64S99.3 0 64 0z" fill="#E44D26"/><path d="M48.8 96.8H29.7L24.2 31.2h49.6l-5.5 65.6z" fill="#F16529"/><path d="M64 96.8V31.2h22.1l-4.5 54.3L64 96.8z" fill="#EBEBEB"/><path d="M64 48.8v-8.7h12.5l1-11.3H64V17.5h26.6l-.5 5.5-2 22.1-1.1 12.4H64zm0 36.7l11.2-3.1.9-10.3H64v-8.7h13.4l-.9 10.3-1.1 12.4-11.4 3.1v-8.7z" fill="#FFF"/><path d="M48.8 48.8h-11l-.5-5.5h11.5v-8.7H31.2l.1.9 1.5 17h16v-8.7zm-1 25.4h-8.7l-1.5-17h18.9v8.7H41.5l.5 5.5h6.3v8.7z" fill="#EBEBEB"/></svg>
+                    <span class="font-bold text-sm">SQL</span>
+                </div>
+                 <!-- Express.js -->
+                <div class="skill-card glass-card rounded-2xl p-4 flex flex-col items-center justify-center gap-3" style="--glow-color: #828282;">
+                    <svg viewBox="0 0 108 62" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M108 14.7c0-2.2-1.8-4-4-4H4c-2.2 0-4 1.8-4 4v32.6c0 2.2 1.8 4 4 4h100c2.2 0 4-1.8 4-4V14.7z" fill="#303030"/><path d="M14.6 21.9c-1.2-1.2-3.1-1.2-4.2 0-1.2 1.2-1.2 3.1 0 4.2l5.9 5.9-5.9 5.9c-1.2 1.2-1.2 3.1 0 4.2 1.2 1.2 3.1 1.2 4.2 0l5.9-5.9 5.9 5.9c1.2 1.2 3.1 1.2 4.2 0 1.2-1.2 1.2-3.1 0-4.2L24.7 32l5.9-5.9c1.2-1.2 1.2-3.1 0-4.2-1.2-1.2-3.1-1.2-4.2 0L20.5 26l-5.9-4.1zM48.2 21.9c-1.2-1.2-3.1-1.2-4.2 0-1.2 1.2-1.2 3.1 0 4.2l5.9 5.9-5.9 5.9c-1.2 1.2-1.2 3.1 0 4.2 1.2 1.2 3.1 1.2 4.2 0l5.9-5.9 5.9 5.9c1.2 1.2 3.1 1.2 4.2 0 1.2-1.2 1.2-3.1 0-4.2L58.3 32l5.9-5.9c1.2-1.2 1.2-3.1 0-4.2-1.2-1.2-3.1-1.2-4.2 0L54.1 26l-5.9-4.1z" fill="#fff"/></svg>
+                    <span class="font-bold text-sm">Express.js</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section flex-col text-center">
+        <div class="max-w-2xl">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4 section-title">Contact</h2>
+            <p class="text-slate-200 mb-8 text-xl">
+                Let's Build Together
+            </p>
+            <p class="text-slate-400 mb-8">
+                I'm currently seeking new opportunities and challenges. If you have a project in mind or just want to connect, feel free to reach out.
+            </p>
+            <a href="mailto:darshantate36@gmail.com" class="inline-flex items-center gap-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+                Mail
+            </a>
+             <div class="flex justify-center space-x-8 mt-12">
+                <a href="https://www.linkedin.com/in/darshan-tate/" target="_blank" class="social-link text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd"/></svg>
+                    <span class="tooltip">LinkedIn</span>
+                </a>
+                <a href="https://github.com/Darshan-Tate" target="_blank" class="social-link text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.168 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.031-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.378.203 2.398.1 2.651.64.7 1.03 1.595 1.03 2.688 0 3.848-2.338 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.001 10.001 0 0022 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd"/></svg>
+                    <span class="tooltip">GitHub</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const preloader = document.getElementById('preloader');
+        const body = document.querySelector('body');
+
+        // GSAP Timelines
+        const masterTimeline = gsap.timeline();
+        const preloaderTimeline = gsap.timeline();
+
+        // Preloader Animation
+        preloaderTimeline.to("#preloader .path", { 
+            strokeDashoffset: 0, 
+            duration: 1.5, 
+            ease: "power2.inOut",
+            stagger: 0.3
+        })
+        .to("#preloader", {
+            opacity: 0,
+            duration: 0.8,
+            ease: "power2.inOut",
+            onComplete: () => preloader.style.display = 'none'
+        }, "+=0.5");
+
+        // Main Content Animation
+        const mainContentTimeline = gsap.timeline();
+        const headline = document.getElementById('hero-headline');
+        const headlineText = "Crafting Digital Experiences";
+        const cursor = headline.querySelector('.blinking-cursor');
+        
+        mainContentTimeline.to(body, { visibility: 'visible', duration: 0 }, 0)
+            .from("header", { y: -100, opacity: 0, duration: 1, ease: "power2.out" })
+            .to(cursor, {
+                onStart: () => {
+                    let i = 0;
+                    const type = () => {
+                        if (i < headlineText.length) {
+                            headline.insertBefore(document.createTextNode(headlineText[i]), cursor);
+                            i++;
+                            setTimeout(type, 100);
+                        } else {
+                            gsap.to(cursor, {opacity: 0, duration: 0.5, ease: 'power2.inOut'});
+                        }
+                    }
+                    type();
+                }
+            })
+            .from(".hero-subtitle", { y: 20, opacity: 0, duration: 1, ease: "power2.out" }, "+=1.5")
+            .from(".hero-cta", { y: 20, opacity: 0, duration: 1, ease: "power2.out" }, "-=0.8");
+
+        masterTimeline.add(preloaderTimeline).add(mainContentTimeline);
+
+        // --- 3D Background Scene ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.querySelector('#bg-canvas'),
+            alpha: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const ambientLight = new THREE.AmbientLight(0x404040, 2);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0x8A2BE2, 1.5);
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
+
+        const particlesGeometry = new THREE.BufferGeometry;
+        const particlesCnt = 5000;
+        const posArray = new Float32Array(particlesCnt * 3);
+        for (let i = 0; i < particlesCnt * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({ size: 0.005, color: 0x8A2BE2 });
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+        camera.position.z = 5;
+
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (event) => {
+            mouseX = event.clientX;
+            mouseY = event.clientY;
+        });
+
+        const clock = new THREE.Clock();
+        const animateBg = () => {
+            const elapsedTime = clock.getElapsedTime();
+            particlesMesh.rotation.y = -0.1 * elapsedTime;
+            camera.position.x += (mouseX * 0.001 - camera.position.x) * .05;
+            camera.position.y += (-mouseY * 0.001 - camera.position.y) * .05;
+            camera.lookAt(scene.position);
+            renderer.render(scene, camera);
+            window.requestAnimationFrame(animateBg);
+        };
+        animateBg();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- Interactive 3D Art in About Section ---
+        const initInteractiveArt = () => {
+            const container = document.querySelector('.about-visual');
+            if (!container) return;
+
+            const scene2 = new THREE.Scene();
+            const camera2 = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            const renderer2 = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#interactive-art-canvas'),
+                alpha: true
+            });
+            renderer2.setSize(container.clientWidth, container.clientHeight);
+            
+            const geometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
+            const material = new THREE.MeshStandardMaterial({ color: 0x8A2BE2, metalness: 0.7, roughness: 0.4 });
+            const torusKnot = new THREE.Mesh(geometry, material);
+            scene2.add(torusKnot);
+
+            const pointLight2 = new THREE.PointLight(0xffffff, 1.2);
+            pointLight2.position.set(5, 5, 5);
+            scene2.add(pointLight2);
+            const ambientLight2 = new THREE.AmbientLight(0xffffff, 0.5);
+            scene2.add(ambientLight2);
+
+            camera2.position.z = 3.5;
+            
+            let isMouseDown = false;
+            let lastMouse = { x: 0, y: 0 };
+
+            container.addEventListener('mousedown', (e) => { isMouseDown = true; });
+            container.addEventListener('mouseup', () => { isMouseDown = false; });
+            container.addEventListener('mouseleave', () => { isMouseDown = false; });
+            container.addEventListener('mousemove', (e) => {
+                if (isMouseDown) {
+                    const deltaX = e.clientX - lastMouse.x;
+                    const deltaY = e.clientY - lastMouse.y;
+                    torusKnot.rotation.y += deltaX * 0.01;
+                    torusKnot.rotation.x += deltaY * 0.01;
+                }
+                lastMouse.x = e.clientX;
+                lastMouse.y = e.clientY;
+            });
+
+            const animateArt = () => {
+                requestAnimationFrame(animateArt);
+                if (!isMouseDown) {
+                    torusKnot.rotation.x += 0.001;
+                    torusKnot.rotation.y += 0.002;
+                }
+                renderer2.render(scene2, camera2);
+            };
+            animateArt();
+
+            new ResizeObserver(() => {
+                requestAnimationFrame(() => {
+                     if (container.clientWidth > 0 && container.clientHeight > 0) {
+                        camera2.aspect = container.clientWidth / container.clientHeight;
+                        camera2.updateProjectionMatrix();
+                        renderer2.setSize(container.clientWidth, container.clientHeight);
+                    }
+                });
+            }).observe(container);
+        };
+        initInteractiveArt();
+
+        // --- Scroll-triggered Animations ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        const sections = gsap.utils.toArray('section');
+        sections.forEach((section, i) => {
+            if (i > 0) { // Skip hero
+                const sectionElements = section.querySelectorAll('.about-text, .about-visual, .project-card, .accomplishment-card, .timeline-container, #contact > div');
+                gsap.from(sectionElements, {
+                    scrollTrigger: { trigger: section, start: "top 80%", end: "bottom 20%", toggleActions: "play none none none" },
+                    opacity: 0, y: 50, stagger: 0.1, duration: 0.8, ease: "power3.out"
+                });
+            }
+        });
+
+        gsap.from(".skill-card", {
+            scrollTrigger: {
+                trigger: "#skills",
+                start: "top 75%",
+            },
+            duration: 0.8,
+            scale: 0.5,
+            y: 50,
+            ease: "elastic.out(1, 0.75)",
+            stagger: {
+                amount: 0.5,
+                from: "center"
+            }
+        });
+        
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    });
+    </script>
+</body>
+</html>
